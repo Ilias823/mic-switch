@@ -395,18 +395,54 @@ def version_tuple(v):
     return tuple(int(x) for x in re.findall(r"\d+", v.split("-")[0])[:3]) or (0,)
 
 
-def latest_release():
-    """{'version', 'page', 'pkg'} of the newest GitHub release. Uses curl, which every Mac has."""
-    out = subprocess.run(["curl", "-sSL", "--max-time", "15", "-H", "Accept: application/vnd.github+json",
-                          "-w", "\n%{http_code}", f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"],
-                         capture_output=True, text=True)
-    body, _, code = out.stdout.rpartition("\n")
-    if out.returncode != 0:
-        raise RuntimeError("Could not reach GitHub. Check the internet connection.")
-    if code == "404":
+CURL = "/usr/bin/curl"   # every Mac has it; the full path avoids other curls on the PATH
+
+
+def fetch_github(url):
+    """GET a GitHub API address. Returns (HTTP status, body text).
+
+    Tries curl twice, then Python's own HTTPS. Raises with the real reason when all fail."""
+    reasons = []
+    for _ in range(2):
+        try:
+            out = subprocess.run([CURL, "-sSL", "--max-time", "20", "-H", "Accept: application/vnd.github+json",
+                                  "-w", "\n%{http_code}", url], capture_output=True, text=True)
+        except OSError as e:
+            reasons.append(str(e))
+            break
+        body, _, code = out.stdout.rpartition("\n")
+        if out.returncode == 0 and code.isdigit():
+            return int(code), body
+        reasons.append((out.stderr or "").strip().replace("curl: ", "") or f"curl stopped with code {out.returncode}")
+    try:
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": "MicSwitch"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return r.status, r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            return e.code, e.read().decode("utf-8", "replace")
+    except Exception as e:
+        reasons.append(str(getattr(e, "reason", e)))
+    raise RuntimeError(f"Could not reach GitHub ({reasons[-1]}).\n\nCheck the internet connection, and that "
+                       "no VPN or firewall blocks api.github.com, then try again.")
+
+
+def check_status(code):
+    if code == 404:
         raise RuntimeError("No release has been published yet.")
-    if code != "200":
-        raise RuntimeError(f"GitHub answered with status {code}.")
+    if code in (403, 429):
+        raise RuntimeError("GitHub is limiting update checks from this internet connection for the moment. "
+                           "Try again in an hour.")
+    if code != 200:
+        raise RuntimeError(f"GitHub answered with status {code}. Try again later.")
+
+
+def latest_release():
+    """{'version', 'page', 'pkg', 'notes'} of the newest GitHub release."""
+    code, body = fetch_github(f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest")
+    check_status(code)
     data = json.loads(body)
     pkg = next((a["browser_download_url"] for a in data.get("assets", [])
                 if a.get("name", "").lower().endswith(".pkg")), None)
@@ -444,7 +480,8 @@ def check_for_updates():
     if dialog(text + "\n\nDownload and install it now?", ("Not Now", "Download")) != "Download":
         return
     target = os.path.join(os.path.expanduser("~/Downloads"), os.path.basename(rel["pkg"]))
-    out = subprocess.run(["curl", "-fsSL", "--max-time", "300", "-o", target, rel["pkg"]], capture_output=True, text=True)
+    out = subprocess.run([CURL, "-fsSL", "--retry", "2", "--max-time", "300", "-o", target, rel["pkg"]],
+                         capture_output=True, text=True)
     if out.returncode != 0:
         dialog("The download failed. Opening the release page instead.")
         subprocess.run(["open", rel["page"]])
