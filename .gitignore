@@ -1,0 +1,10 @@
+# Builds
+build/
+installer/build/
+dist/
+
+# Audio stays local
+*.wav
+
+__pycache__/
+.DS_Store

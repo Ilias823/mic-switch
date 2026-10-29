@@ -1,0 +1,10 @@
+#!/bin/sh
+# Removes a per-user copy of the Scripts-menu entry from a development setup, so the menu does
+# not show "Mic Switch" twice next to the one just installed for all users.
+user="$(stat -f%Su /dev/console)"
+home="$(dscl . -read "/Users/$user" NFSHomeDirectory 2>/dev/null | awk '{print $2}')"
+old="$home/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/Mic Switch.py"
+if [ -n "$home" ] && [ -f "$old" ]; then
+    rm -f "$old"
+fi
+exit 0
