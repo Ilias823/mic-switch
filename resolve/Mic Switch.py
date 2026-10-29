@@ -21,6 +21,7 @@ VERSION = "@VERSION@"
 SETTINGS_FILE = os.path.expanduser("~/Library/Application Support/MicSwitch/settings.json")
 UPDATE_REPO = "Ilias823/mic-switch"      # GitHub repository whose releases "Check for Updates" reads
 DONATE_URL = "https://ko-fi.com/ilias823"
+PRO_URL = "https://ko-fi.com/ilias823/shop"   # Mic Switch Pro (closed source) is sold in the Ko-fi shop
 
 # (key, label, default, minimum, maximum, tooltip). The keys are the analyzer's "set" names.
 SETTINGS = [
@@ -547,9 +548,15 @@ def main():
                 ui.HGap(),
                 ui.Button({"ID": "Donate", "Text": "Support on Ko-fi", "Flat": True}),
             ]),
+            ui.HGroup({"Weight": 0}, [
+                ui.HGap(),
+                ui.Button({"ID": "Pro", "Text": "Get Mic Switch Pro: cameras follow the speaker", "Flat": True,
+                           "ToolTip": "Mic Switch Pro also switches the cameras to whoever is talking, and to "
+                                      "the wide shot when people talk at once. Sold in the Ko-fi shop."}),
+            ]),
         ]))
     items = win.GetItems()
-    buttons = ["Analyze", "Apply", "Close", "Defaults", "Update", "Donate"]
+    buttons = ["Analyze", "Apply", "Close", "Defaults", "Update", "Donate", "Pro"]
 
     def bar(fraction, text, fill="#c4552c"):
         f = max(0.0, min(1.0, fraction))
@@ -625,6 +632,9 @@ def main():
     def on_donate(ev):
         subprocess.run(["open", DONATE_URL])
 
+    def on_pro(ev):
+        subprocess.run(["open", PRO_URL])
+
     def on_close(ev):
         save_settings(current_values())
         disp.ExitLoop()
@@ -634,6 +644,7 @@ def main():
     win.On.Defaults.Clicked = on_defaults
     win.On.Update.Clicked = on_update
     win.On.Donate.Clicked = on_donate
+    win.On.Pro.Clicked = on_pro
     win.On.Close.Clicked = on_close
     win.On.MicSwitch.Close = on_close
     win.Show()
