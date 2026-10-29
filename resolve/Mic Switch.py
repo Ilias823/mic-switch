@@ -21,7 +21,7 @@ VERSION = "@VERSION@"
 SETTINGS_FILE = os.path.expanduser("~/Library/Application Support/MicSwitch/settings.json")
 UPDATE_REPO = "Ilias823/mic-switch"      # GitHub repository whose releases "Check for Updates" reads
 DONATE_URL = "https://ko-fi.com/ilias823"
-PRO_URL = "https://ko-fi.com/ilias823/shop"   # Mic Switch Pro (closed source) is sold in the Ko-fi shop
+PRO_URL = "https://ko-fi.com/s/79a9ccd6d9"   # Mic Switch Pro (closed source) in the Ko-fi shop
 
 # (key, label, default, minimum, maximum, tooltip). The keys are the analyzer's "set" names.
 SETTINGS = [

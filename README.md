@@ -63,5 +63,13 @@ Uninstall: `sudo "/Library/Application Support/MicSwitch/uninstall.sh"`
 2. Commit and push.
 3. Run `installer/release.sh "What is new"`. It builds the installer and publishes the GitHub release that Check for Updates finds.
 
+## Mic Switch Pro
+Want the **cameras** to follow the speaker too? [Mic Switch Pro](https://ko-fi.com/s/79a9ccd6d9) adds the following:
+- each person's camera is shown while they talk,
+- the wide camera is shown when people talk at the same time,
+- no shot is shorter than a set length.
+
+It works the same way, on a copy of your timeline. It's sold in the Ko-fi shop, and buying it supports this free version. In Mic Switch, press **Get Mic Switch Pro** to open the shop.
+
 ## Support and licence
 Mic Switch is free and open source, licensed under the [GNU General Public License v3.0](LICENSE). If it saves you time, you can [support it on Ko-fi](https://ko-fi.com/ilias823).
